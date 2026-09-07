@@ -5,8 +5,3 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.12 });
 document.querySelectorAll('.reveal').forEach((element) => observer.observe(element));
 
-document.getElementById('contactButton').addEventListener('click', () => {
-  const hint = document.getElementById('contactHint');
-  hint.hidden = false;
-  hint.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-});
