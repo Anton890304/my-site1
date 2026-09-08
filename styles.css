@@ -616,9 +616,9 @@ h1 {
 
 /* Модификаторы карточек фактов */
 .fact.wide { grid-column: span 2; }
-.fact.red { background: var(--orange); }
+.fact.red { background: #ffa382; }
 .fact.green { background: var(--lime); }
-.fact.plans { background: var(--violet); }
+.fact.plans { background: #deccff; }
 
 
 /* ==========================================================================
