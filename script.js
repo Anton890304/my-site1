@@ -21,3 +21,60 @@ document.querySelectorAll('.facts-grid .fact').forEach((fact) => {
     }
   });
 });
+const shareButton = document.getElementById('shareSite');
+
+if (shareButton) {
+  const defaultLabel = shareButton.innerHTML;
+  const publicUrl = /^https?:$/.test(window.location.protocol)
+    ? `${window.location.origin}${window.location.pathname}`
+    : 'https://anton890304.github.io/my-site1/';
+
+  const showShareStatus = (label, isSuccess = false) => {
+    shareButton.innerHTML = `${label} <span>${isSuccess ? '✓' : '↗'}</span>`;
+    shareButton.classList.toggle('is-success', isSuccess);
+
+    window.setTimeout(() => {
+      shareButton.innerHTML = defaultLabel;
+      shareButton.classList.remove('is-success');
+    }, 2400);
+  };
+
+  const copySiteUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+    } catch {
+      const temporaryInput = document.createElement('textarea');
+      temporaryInput.value = publicUrl;
+      temporaryInput.setAttribute('readonly', '');
+      temporaryInput.style.position = 'fixed';
+      temporaryInput.style.opacity = '0';
+      document.body.appendChild(temporaryInput);
+      temporaryInput.select();
+      document.execCommand('copy');
+      temporaryInput.remove();
+    }
+
+    showShareStatus('Ссылка скопирована', true);
+  };
+
+  shareButton.addEventListener('click', async () => {
+    const isMobileDevice = navigator.userAgentData?.mobile === true
+      || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const prefersNativeShare = typeof navigator.share === 'function' && isMobileDevice;
+
+    if (prefersNativeShare) {
+      try {
+        await navigator.share({
+          title: document.title,
+          text: 'Познакомься с Антоном',
+          url: publicUrl,
+        });
+        return;
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+      }
+    }
+
+    await copySiteUrl();
+  });
+}
