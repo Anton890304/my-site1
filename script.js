@@ -78,3 +78,60 @@ if (shareButton) {
     await copySiteUrl();
   });
 }
+const qaTrack = document.getElementById('qaTrack');
+const qaPrevious = document.querySelector('.qa-prev');
+const qaNext = document.querySelector('.qa-next');
+const qaCurrent = document.getElementById('qaCurrent');
+
+if (qaTrack && qaPrevious && qaNext && qaCurrent) {
+  const qaCards = [...qaTrack.querySelectorAll('.qa-card')];
+  let scrollFrame;
+
+  const getMetrics = () => {
+    const firstCard = qaCards[0];
+    const styles = window.getComputedStyle(qaTrack);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
+    const step = firstCard.getBoundingClientRect().width + gap;
+    const visibleCards = Math.max(1, Math.round((qaTrack.clientWidth + gap) / step));
+    return { step, visibleCards };
+  };
+
+  const getCurrentIndex = () => {
+    const { step } = getMetrics();
+    return Math.max(0, Math.min(qaCards.length - 1, Math.round(qaTrack.scrollLeft / step)));
+  };
+
+  const updateQaControls = () => {
+    const currentIndex = getCurrentIndex();
+    const { visibleCards } = getMetrics();
+    qaCurrent.textContent = String(currentIndex + 1).padStart(2, '0');
+    qaPrevious.disabled = currentIndex === 0;
+    qaNext.disabled = currentIndex >= qaCards.length - visibleCards;
+  };
+
+  const moveQaCarousel = (direction) => {
+    const currentIndex = getCurrentIndex();
+    const { step, visibleCards } = getMetrics();
+    const lastStart = Math.max(0, qaCards.length - visibleCards);
+    const targetIndex = Math.max(0, Math.min(lastStart, currentIndex + direction * visibleCards));
+    qaTrack.scrollTo({ left: targetIndex * step, behavior: 'smooth' });
+  };
+
+  qaPrevious.addEventListener('click', () => moveQaCarousel(-1));
+  qaNext.addEventListener('click', () => moveQaCarousel(1));
+
+  qaTrack.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      moveQaCarousel(event.key === 'ArrowRight' ? 1 : -1);
+    }
+  });
+
+  qaTrack.addEventListener('scroll', () => {
+    window.cancelAnimationFrame(scrollFrame);
+    scrollFrame = window.requestAnimationFrame(updateQaControls);
+  }, { passive: true });
+
+  window.addEventListener('resize', updateQaControls);
+  updateQaControls();
+}
