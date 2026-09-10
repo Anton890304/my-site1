@@ -66,7 +66,7 @@ if (shareButton) {
       try {
         await navigator.share({
           title: document.title,
-          text: 'Познакомься с Антоном',
+          text: 'Мне кажется, вам нужно пообщаться',
           url: publicUrl,
         });
         return;
