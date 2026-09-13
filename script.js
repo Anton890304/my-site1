@@ -135,3 +135,92 @@ if (qaTrack && qaPrevious && qaNext && qaCurrent) {
   window.addEventListener('resize', updateQaControls);
   updateQaControls();
 }
+const questionDataElement = document.getElementById('questionRandomizerData');
+const questionMachine = document.getElementById('questionMachine');
+const questionMachineWindow = document.getElementById('questionMachineWindow');
+const questionReel = document.getElementById('questionReel');
+const randomCategory = document.getElementById('randomCategory');
+const topicButtons = [...document.querySelectorAll('.topic-button')];
+
+if (questionDataElement && questionMachine && questionMachineWindow && questionReel && randomCategory && topicButtons.length) {
+  const questionData = JSON.parse(questionDataElement.textContent);
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const allQuestions = Object.values(questionData)
+    .filter((category) => Array.isArray(category.questions))
+    .flatMap((category) => category.questions);
+  let activeRun = 0;
+  let finishTimeout;
+
+  const shuffleQuestions = (questions) => {
+    const shuffled = [...questions];
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+    }
+    return shuffled;
+  };
+
+  const renderQuestionReel = (questions) => {
+    const items = questions.map((question) => {
+      const item = document.createElement('p');
+      item.className = 'question-reel-item';
+      item.textContent = question;
+      return item;
+    });
+    questionReel.replaceChildren(...items);
+  };
+
+  topicButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const currentRun = ++activeRun;
+      const topic = button.dataset.topic;
+      const category = questionData[topic];
+      if (!category) return;
+
+      const sourceQuestions = category.mode === 'all' ? allQuestions : category.questions;
+      if (!sourceQuestions?.length) return;
+
+      window.clearTimeout(finishTimeout);
+      topicButtons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+      randomCategory.textContent = category.label;
+      questionReel.setAttribute('aria-busy', 'true');
+
+      const shuffled = shuffleQuestions(sourceQuestions);
+      const finalQuestion = shuffled[0];
+      const reelQuestions = shuffled.slice(1, Math.min(12, shuffled.length));
+      reelQuestions.push(finalQuestion);
+
+      const finish = () => {
+        if (currentRun !== activeRun) return;
+        questionMachine.classList.remove('is-spinning');
+        questionReel.style.transition = 'none';
+        questionReel.style.transform = 'translateY(0)';
+        renderQuestionReel([finalQuestion]);
+        questionReel.setAttribute('aria-busy', 'false');
+      };
+
+      if (reduceMotion.matches) {
+        finish();
+        return;
+      }
+
+      renderQuestionReel(reelQuestions);
+      const windowHeight = questionMachineWindow.clientHeight;
+      const distance = (reelQuestions.length - 1) * windowHeight;
+      const duration = 1250 + reelQuestions.length * 35;
+      questionReel.style.setProperty('--question-window-height', `${windowHeight}px`);
+      questionReel.style.transition = 'none';
+      questionReel.style.transform = 'translateY(0)';
+      questionMachine.classList.add('is-spinning');
+      void questionReel.offsetHeight;
+
+      window.requestAnimationFrame(() => {
+        if (currentRun !== activeRun) return;
+        questionReel.style.transition = `transform ${duration}ms cubic-bezier(.12, .72, .18, 1)`;
+        questionReel.style.transform = `translateY(-${distance}px)`;
+      });
+
+      finishTimeout = window.setTimeout(finish, duration + 80);
+    });
+  });
+}
