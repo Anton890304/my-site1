@@ -907,6 +907,7 @@ h1 {
 .social-instagram { --shadow-color: #9a65ff; }
 .social-tg { --shadow-color: #36aee2; }
 .social-max { --shadow-color: #172b73; }
+.social-form { --shadow-color: #fff98b; }
 .social-share { --shadow-color: var(--orange); }
 .social-share.is-success { --shadow-color: #4f5a19; }
 /* Сохраняем исходные цвета q1.webp на мобильных устройствах */
